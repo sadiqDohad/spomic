@@ -1,6 +1,3 @@
-install.packages("spatstat.geom")
-library(spatstat.geom)
-
 #' @export
 setClass(
   "Spomic",
