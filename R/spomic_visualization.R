@@ -1,5 +1,6 @@
 usethis::use_package("ggplot2")
 
+
 #' @export
 plotCellProportions <- function(spomic, stack = TRUE) {
   proportions <- spomic@df |>
