@@ -33,7 +33,7 @@ spomic_to_pp <- function(df) {
 }
 
 #' @export
-createSpomic <- function(p, drop_na = TRUE) {
+create_spomic <- function(p, drop_na = TRUE) {
   # Check input type and read data
   if (is.character(p)) {
     if (!file.exists(p)) stop("File does not exist: ", p)
