@@ -93,7 +93,7 @@ create_spomic <- function(p, drop_na = TRUE) {
   object <- new("Spomic",
                 details = list(),
                 df = df,
-                pp = spomic_to_pp,
+                pp = spomic_to_pp(df),
                 results = list()
   )
 
