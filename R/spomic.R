@@ -5,8 +5,9 @@ setClass(
     sample = "character",
     df = "data.frame",
     pp = "ANY",  # Allow any object, including ppp
-    null_envelope = "data.frame",
-    hyperparameters = "list"
+    # null_envelope = "data.frame",
+    hyperparameters = "list",
+    results = "list"
   ),
   prototype = list(
     pp = NULL  # Initialize as NULL to avoid undefined slot
@@ -70,8 +71,9 @@ create_spomic <- function(p, drop_na = TRUE) {
                 sample = as.character(unique_samples),
                 df = df,
                 pp = spomic_to_pp(df),
-                null_envelope = data.frame(),
-                hyperparameters = list()
+                # null_envelope = data.frame(),
+                hyperparameters = list(),
+                results = list()
   )
 
   return(object)
