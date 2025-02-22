@@ -1,12 +1,27 @@
+#' #' @export
+#' setClass(
+#'   "Spomic",
+#'   slots = c(
+#'     sample = "character",
+#'     df = "data.frame",
+#'     pp = "ANY",  # Allow any object, including ppp
+#'     # null_envelope = "data.frame",
+#'     hyperparameters = "list",
+#'     results = "list"
+#'   ),
+#'   prototype = list(
+#'     pp = NULL  # Initialize as NULL to avoid undefined slot
+#'   )
+#' )
+#'
 #' @export
 setClass(
   "Spomic",
   slots = c(
-    sample = "character",
+    details = "list",
     df = "data.frame",
-    pp = "ANY",  # Allow any object, including ppp
-    # null_envelope = "data.frame",
-    hyperparameters = "list",
+    pp = "ANY",
+
     results = "list"
   ),
   prototype = list(
@@ -67,14 +82,23 @@ create_spomic <- function(p, drop_na = TRUE) {
   }
 
   # Create Spomic object
+  # object <- new("Spomic",
+  #               sample = as.character(unique_samples),
+  #               df = df,
+  #               pp = spomic_to_pp(df),
+  #               # null_envelope = data.frame(),
+  #               hyperparameters = list(),
+  #               results = list()
+  # )
   object <- new("Spomic",
-                sample = as.character(unique_samples),
+                details = list(),
                 df = df,
-                pp = spomic_to_pp(df),
-                # null_envelope = data.frame(),
-                hyperparameters = list(),
+                pp = spomic_to_pp,
                 results = list()
   )
+
+  object@details$sample <- unique(object@df$sample)
+  object@details$hyperparameters <- list()
 
   return(object)
 }
