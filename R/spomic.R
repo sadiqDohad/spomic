@@ -1,19 +1,3 @@
-#' #' @export
-#' setClass(
-#'   "Spomic",
-#'   slots = c(
-#'     sample = "character",
-#'     df = "data.frame",
-#'     pp = "ANY",  # Allow any object, including ppp
-#'     # null_envelope = "data.frame",
-#'     hyperparameters = "list",
-#'     results = "list"
-#'   ),
-#'   prototype = list(
-#'     pp = NULL  # Initialize as NULL to avoid undefined slot
-#'   )
-#' )
-#'
 #' @export
 setClass(
   "Spomic",
@@ -38,12 +22,33 @@ validate_columns <- function(df, required_columns) {
 }
 
 #' @export
+reorder_counterclockwise <- function(coords) {
+  # Calculate centroid
+  centroid_x <- mean(coords[, 1])
+  centroid_y <- mean(coords[, 2])
+
+  # Calculate angle from centroid
+  angles <- atan2(coords[, 2] - centroid_y, coords[, 1] - centroid_x)
+
+  # Reorder points by angle (counterclockwise)
+  ordered_coords <- coords[order(angles), ]
+  return(ordered_coords)
+}
+
+#' @export
 spomic_to_pp <- function(df) {
   xrange <- range(df$x)
   yrange <- range(df$y)
+
+  concave_hull <- concaveman::concaveman(cbind(df$x, df$y), concavity = 50)
+  concave_hull_ccw <- reorder_counterclockwise(concave_hull)
+  tight_window <- spatstat.geom::owin(poly = list(x = concave_hull_ccw[, 1],
+                                   y = concave_hull_ccw[, 2]))
+
   pp <- spatstat.geom::ppp(df$x,
             df$y,
-            window = spatstat.geom::owin(xrange, yrange),
+            window = tight_window,
+            # window = spatstat.geom::owin(xrange, yrange),
             marks = factor(df$cell_type))
   return(pp)
 }
