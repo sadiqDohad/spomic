@@ -108,3 +108,10 @@ create_spomic <- function(p, drop_na = TRUE) {
   return(object)
 }
 
+#' @export
+set_spomic_hyperparameters <- function(spomic, r, colocalization_type = "Kcross.inhom") {
+  spomic@details$hyperparameters$r <- r
+  spomic@details$hyperparameters$colocalization_type <- colocalization_type
+
+  return(spomic)
+}
