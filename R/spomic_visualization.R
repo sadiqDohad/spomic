@@ -32,9 +32,31 @@ plotCellProportions <- function(spomic, stack = TRUE) {
 }
 
 
+#' #' @export
+#' plotSpomic <- function(spomic_obj, point_size = 0.75){
+#'   g <- ggplot(spomic_obj@df, aes(x = x, y = y, color = cell_type)) +
+#'     geom_point(size = point_size) +
+#'     coord_fixed(ratio = 1) +
+#'     theme_minimal() +
+#'     theme(plot.background = element_rect(fill = "black"),
+#'           panel.grid.major = element_blank(),
+#'           panel.grid.minor = element_blank(),
+#'           axis.text = element_blank(),
+#'           legend.title = element_blank(),
+#'           legend.position = "bottom",
+#'           legend.text = element_text(color = "white"),
+#'           legend.spacing.y = unit(0.1, 'cm'),    # Reduce vertical spacing
+#'           legend.key.size = unit(0.5, 'cm'),       # Increase color legend size
+#'           legend.background = element_rect(fill = "black", color = NA),  # Black legend background
+#'           legend.box.background = element_rect(fill = "black", color = NA)  # Black legend box background
+#'     ) +
+#'     guides(color = guide_legend(override.aes = list(size = 2.5)))  # Control color legend point size
+#'
+#'   return(g)
+#' }
 #' @export
-plotSpomic <- function(spomic_obj, point_size = 0.75){
-  g <- ggplot(spomic_obj@df, aes(x = x, y = y, color = cell_type)) +
+plot_spomic <- function(spomic, point_size = 0.75){
+  g <- ggplot(spomic@df, aes(x = x, y = y, color = cell_type)) +
     geom_point(size = point_size) +
     coord_fixed(ratio = 1) +
     theme_minimal() +
