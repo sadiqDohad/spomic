@@ -39,9 +39,9 @@ find_nonrandom_pairs <- function(spomic) {
   pairs <- names(envelope_list)
   for(pair in names(envelope_list)) {
     env <- envelope_list[[pair]]
-    obs <- approx(env$r, env$obs, xout = r)$y
-    lo <- approx(env$r, env$lo, xout = r)$y
-    hi <- approx(env$r, env$hi, xout = r)$y
+    obs <- approx(env$r, env$obs, xout = spomic@details$hyperparameters$r)$y
+    lo <- approx(env$r, env$lo, xout = spomic@details$hyperparameters$r)$y
+    hi <- approx(env$r, env$hi, xout = spomic@details$hyperparameters$r)$y
 
     nonrandom_pairs[[pair]] <- data.frame(
       i_j = pair,
