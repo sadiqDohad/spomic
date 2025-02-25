@@ -11,16 +11,40 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
 
     if(verbose) cat("Calculating CSR envelope for pair:", i, "-", j, "\n")
 
+    ij_subset <- spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))
+    i_subset <- spatstat.geom::subset.ppp(spomic@pp, marks == i)
+    j_subset <- spatstat.geom::subset.ppp(spomic@pp, marks == j)
+
+    silverman_i <- get_silverman(i_subset)
+    silverman_j <- get_silverman(j_subset)
+
+    # lambdaFrom <- density(spatstat.geom::subset.ppp(spomic@pp, marks == i), sigma = bw.diggle)
+    # lambdaTo <- density(spatstat.geom::subset.ppp(spomic@pp, marks == j), sigma = bw.diggle)
+
+    # envelope_result <- spatstat.explore::envelope(
+    #   Y = spatstat.geom::rescale(spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))),
+    #   # Y = spatstat.geom::rescale(spomic@pp),
+    #   fun = spatstat.explore::Kcross.inhom,
+    #   i = i,
+    #   j = j,
+    #   fix.marks = TRUE,
+    #   correction = "Ripley",
+    #   nsim = spomic@details$hyperparameters$csr_nsim,
+    #   global = FALSE,
+    #   verbose = verbose
+    # )
     envelope_result <- spatstat.explore::envelope(
-      Y = spatstat.geom::rescale(spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))),
-      # Y = spatstat.geom::rescale(spomic@pp),
+      Y = spatstat.geom::rescale(ij_subset),
       fun = spatstat.explore::Kcross.inhom,
       i = i,
       j = j,
+      lambdaFrom = density(i_subset, sigma = silverman_i),
+      lambdaTo = density(j_subset, sigma = silverman_j),
       fix.marks = TRUE,
       correction = "Ripley",
       nsim = spomic@details$hyperparameters$csr_nsim,
       global = FALSE,
+      # update = TRUE,
       verbose = verbose
     )
 
@@ -41,6 +65,7 @@ find_nonrandom_pairs <- function(spomic) {
   for(pair in names(envelope_list)) {
     env <- envelope_list[[pair]]
     obs <- approx(env$r, env$obs, xout = spomic@details$hyperparameters$r)$y
+    theo <- approx(env$r, env$theo, xout = spomic@details$hyperparameters$r)$y
     lo <- approx(env$r, env$lo, xout = spomic@details$hyperparameters$r)$y
     hi <- approx(env$r, env$hi, xout = spomic@details$hyperparameters$r)$y
 
@@ -50,7 +75,7 @@ find_nonrandom_pairs <- function(spomic) {
       observed = obs,
       lower = lo,
       upper = hi,
-      nonrandom = !dplyr::between(obs, lo, hi)
+      nonrandom = !dplyr::between(obs, lo, hi) & dplyr::between(theo, lo, hi)
     )
   }
   nonrandom_pairs <- dplyr::bind_rows(nonrandom_pairs)
