@@ -12,7 +12,8 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     if(verbose) cat("Calculating CSR envelope for pair:", i, "-", j, "\n")
 
     envelope_result <- spatstat.explore::envelope(
-      Y = spatstat.geom::rescale(spomic@pp),
+      Y = spatstat.geom::rescale(spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))),
+      # Y = spatstat.geom::rescale(spomic@pp),
       fun = spatstat.explore::Kcross.inhom,
       i = i,
       j = j,
@@ -60,6 +61,20 @@ find_nonrandom_pairs <- function(spomic) {
   return(spomic)
 }
 
+#' @export
+get_silverman <- function(pp_subset) {
+  n <- npoints(pp_subset)
+  coords <- spatstat.geom::coords(pp_subset)
+  sd_x <- sd(coords$x)
+  sd_y <- sd(coords$y)
+  sd_total <- sqrt(sd_x^2 + sd_y^2)
+  sigma_silverman <- sd_total * n^(-1/5)
+
+  return(sigma_silverman)
+}
+
+
+
 
 #' @export
 get_kcross <- function(spomic, i, j) {
@@ -71,18 +86,36 @@ get_kcross <- function(spomic, i, j) {
                       colocalization_stat = NA,
                       colocalization_var = NA))
   }
-
+  ij_subset <- spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))
   i_subset <- spatstat.geom::subset.ppp(spomic@pp, marks == i)
   j_subset <-  spatstat.geom::subset.ppp(spomic@pp, marks == j)
 
+  silverman_i <- get_silverman(i_subset)
+  silverman_j <- get_silverman(j_subset)
+
+  # suppressWarnings({
+  #   invisible(capture.output({ # The lohboot function has some annoying printouts
+  #     loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(spomic@pp),
+  #                                                spatstat.explore::Kcross.inhom,
+  #                                                from = i,
+  #                                                to = j,
+  #                                                lambdaFrom = spatstat.explore::density.ppp(i_subset),
+  #                                                lambdaTo = spatstat.explore::density.ppp(j_subset),
+  #                                                correction = "Ripley",
+  #                                                global = FALSE,
+  #                                                nsim = 100)
+  #   })
+  #
+  #   )
+  # })
   suppressWarnings({
     invisible(capture.output({ # The lohboot function has some annoying printouts
-      loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(spomic@pp),
+      loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(ij_subset),
                                                  spatstat.explore::Kcross.inhom,
                                                  from = i,
                                                  to = j,
-                                                 lambdaFrom = spatstat.explore::density.ppp(i_subset),
-                                                 lambdaTo = spatstat.explore::density.ppp(j_subset),
+                                                 lambdaFrom = spatstat.explore::density.ppp(i_subset, sigma = silverman_i),
+                                                 lambdaTo = spatstat.explore::density.ppp(j_subset, sigma = silverman_j),
                                                  correction = "Ripley",
                                                  global = FALSE,
                                                  nsim = 100)
