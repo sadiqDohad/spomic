@@ -126,7 +126,9 @@ find_nonrandom_pairs <- function(spomic) {
       observed = obs,
       lower = lo,
       upper = hi,
-      nonrandom = !dplyr::between(obs, lo, hi) & dplyr::between(theo, lo, hi)
+      # nonrandom = !dplyr::between(obs, lo, hi) & dplyr::between(theo, lo, hi)
+      nonrandom = !dplyr::between(obs, lo, hi) & dplyr::between(mmean, lo, hi)
+
     )
   }
   nonrandom_pairs <- dplyr::bind_rows(nonrandom_pairs)
