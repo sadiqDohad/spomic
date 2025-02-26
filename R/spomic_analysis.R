@@ -18,13 +18,42 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     silverman_i <- get_silverman(i_subset)
     silverman_j <- get_silverman(j_subset)
 
-    lambdaFrom <- density(i_subset, sigma = silverman_i)
-    lambdaTo <- density(j_subset, sigma = silverman_j)
+    lambdaFrom <- spatstat.explore::density.ppp(i_subset, sigma = silverman_i)
+    lambdaTo <- spatstat.explore::density.ppp(j_subset, sigma = silverman_j)
 
-    simulate_expr <- expression(superimpose(
-      i = rpoispp(lambdaFrom),
-      j = rpoispp(lambdaTo)
-    ))
+    if(i == j) {
+      simulate_expr <- expression(
+        do.call(superimpose, setNames(
+          list(
+            rpoispp(lambdaTo)
+          ),
+          c(i)
+        ))
+      )
+    } else {
+      simulate_expr <- expression(
+        do.call(spatstat.geom::superimpose, setNames(
+          list(
+            spatstat.random::rpoispp(lambdaTo),
+            spatstat.random::rpoispp(lambdaFrom)
+          ),
+          c(i, j)
+        ))
+      )
+    }
+
+    envelope_result <- spatstat.explore::envelope(
+      Y = spatstat.geom::rescale(ij_subset),
+      fun = spatstat.explore::Kcross,
+      i = i,
+      j = j,
+      simulate = simulate_expr,
+      update = TRUE,
+      correction = "translate",
+      nsim = spomic@details$hyperparameters$csr_nsim,
+      global = FALSE,
+      verbose = TRUE
+    )
 
     # lambdaFrom <- density(spatstat.geom::subset.ppp(spomic@pp, marks == i), sigma = bw.diggle)
     # lambdaTo <- density(spatstat.geom::subset.ppp(spomic@pp, marks == j), sigma = bw.diggle)
@@ -57,18 +86,18 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     #   verbose = verbose
     # )
 
-    envelope_result <- spatstat.explore::envelope(
-      Y = spatstat.geom::rescale(ij_subset),
-      fun = spatstat.explore::Kcross,
-      i = i,
-      j = j,
-      simulate = simulate_expr,
-      update = TRUE,
-      correction = "Ripley",
-      nsim = spomic@details$hyperparameters$csr_nsim,
-      global = FALSE,
-      verbose = TRUE
-    )
+    # envelope_result <- spatstat.explore::envelope(
+    #   Y = spatstat.geom::rescale(ij_subset),
+    #   fun = spatstat.explore::Kcross,
+    #   i = i,
+    #   j = j,
+    #   simulate = simulate_expr,
+    #   update = TRUE,
+    #   correction = "Ripley",
+    #   nsim = spomic@details$hyperparameters$csr_nsim,
+    #   global = FALSE,
+    #   verbose = TRUE
+    # )
 
     envelope_results[[paste0(i, "_", j)]] <- envelope_result
 
