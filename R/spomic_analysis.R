@@ -18,6 +18,14 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     silverman_i <- get_silverman(i_subset)
     silverman_j <- get_silverman(j_subset)
 
+    lambdaFrom <- density(i_subset, sigma = silverman_i)
+    lambdaTo <- density(j_subset, sigma = silverman_j)
+
+    simulate_expr <- expression(superimpose(
+      i = rpoispp(lambdaFrom),
+      j = rpoispp(lambdaTo)
+    ))
+
     # lambdaFrom <- density(spatstat.geom::subset.ppp(spomic@pp, marks == i), sigma = bw.diggle)
     # lambdaTo <- density(spatstat.geom::subset.ppp(spomic@pp, marks == j), sigma = bw.diggle)
 
@@ -33,19 +41,33 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     #   global = FALSE,
     #   verbose = verbose
     # )
+
+    # envelope_result <- spatstat.explore::envelope(
+    #   Y = spatstat.geom::rescale(ij_subset),
+    #   fun = spatstat.explore::Kcross.inhom,
+    #   i = i,
+    #   j = j,
+    #   lambdaFrom = density(i_subset, sigma = silverman_i),
+    #   lambdaTo = density(j_subset, sigma = silverman_j),
+    #   fix.marks = TRUE,
+    #   correction = "Ripley",
+    #   nsim = spomic@details$hyperparameters$csr_nsim,
+    #   global = FALSE,
+    #   # update = TRUE,
+    #   verbose = verbose
+    # )
+
     envelope_result <- spatstat.explore::envelope(
       Y = spatstat.geom::rescale(ij_subset),
-      fun = spatstat.explore::Kcross.inhom,
+      fun = spatstat.explore::Kcross,
       i = i,
       j = j,
-      lambdaFrom = density(i_subset, sigma = silverman_i),
-      lambdaTo = density(j_subset, sigma = silverman_j),
-      fix.marks = TRUE,
+      simulate = simulate_expr,
+      update = TRUE,
       correction = "Ripley",
       nsim = spomic@details$hyperparameters$csr_nsim,
       global = FALSE,
-      # update = TRUE,
-      verbose = verbose
+      verbose = TRUE
     )
 
     envelope_results[[paste0(i, "_", j)]] <- envelope_result
@@ -118,6 +140,14 @@ get_kcross <- function(spomic, i, j) {
   silverman_i <- get_silverman(i_subset)
   silverman_j <- get_silverman(j_subset)
 
+  lambdaFrom <- density(i_subset, sigma = silverman_i)
+  lambdaTo <- density(j_subset, sigma = silverman_j)
+
+  simulate_expr <- expression(superimpose(
+    i = rpoispp(lambdaFrom),
+    j = rpoispp(lambdaTo)
+  ))
+
   # suppressWarnings({
   #   invisible(capture.output({ # The lohboot function has some annoying printouts
   #     loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(spomic@pp),
@@ -139,8 +169,9 @@ get_kcross <- function(spomic, i, j) {
                                                  spatstat.explore::Kcross.inhom,
                                                  from = i,
                                                  to = j,
-                                                 lambdaFrom = spatstat.explore::density.ppp(i_subset, sigma = silverman_i),
-                                                 lambdaTo = spatstat.explore::density.ppp(j_subset, sigma = silverman_j),
+                                                 # lambdaFrom = spatstat.explore::density.ppp(i_subset, sigma = silverman_i),
+                                                 # lambdaTo = spatstat.explore::density.ppp(j_subset, sigma = silverman_j),
+                                                 simulate = simulate_expr,
                                                  correction = "Ripley",
                                                  global = FALSE,
                                                  nsim = 100)
