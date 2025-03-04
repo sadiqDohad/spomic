@@ -2,11 +2,10 @@
 setClass(
   "Spomic",
   slots = c(
-    details = "list",
+    details = "list", # This is flexible for you to add hyperparameters of various functions that you want to record
     df = "data.frame",
     pp = "ANY",
-
-    results = "list"
+    results = "list" # This is flexible for you to add different resutls that you want to record
   ),
   prototype = list(
     pp = NULL  # Initialize as NULL to avoid undefined slot

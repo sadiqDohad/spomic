@@ -1,10 +1,12 @@
 #' @export
 calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
-  envelope_results <- list()
+  # Find all pairwise combinations of cell types
   unique_marks <- unique(spatstat.geom::marks(spomic@pp))
   combinations <- expand.grid(unique_marks, unique_marks)
   pairwise_combinations <- apply(combinations, 1, function(x) paste(x, collapse = "_"))
 
+
+  envelope_results <- list()
   envelope_results <- lapply(1:length(pairwise_combinations), function(k) {
     i <- as.character(combinations[k, 1])
     j <- as.character(combinations[k, 2])
@@ -15,17 +17,20 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
     i_subset <- spatstat.geom::subset.ppp(spomic@pp, marks == i)
     j_subset <- spatstat.geom::subset.ppp(spomic@pp, marks == j)
 
+    # Use Silverman's rule of thumb to determine the smoothing sigma value
+    # Sparser cell populations will get a higher degree of smoothing.
     silverman_i <- get_silverman(i_subset)
     silverman_j <- get_silverman(j_subset)
 
     lambdaFrom <- spatstat.explore::density.ppp(i_subset, sigma = silverman_i)
     lambdaTo <- spatstat.explore::density.ppp(j_subset, sigma = silverman_j)
 
+    # Create expressions for sampling the from the inhomogeneous intensity functions
     if(i == j) {
       simulate_expr <- expression(
-        do.call(superimpose, setNames(
+        do.call(spatstat.geom::superimpose, setNames(
           list(
-            rpoispp(lambdaTo)
+            spatstat.random::rpoispp(lambdaTo)
           ),
           c(i)
         ))
@@ -55,52 +60,7 @@ calculate_csr_envelopes <- function(spomic, verbose = TRUE) {
       verbose = TRUE
     )
 
-    # lambdaFrom <- density(spatstat.geom::subset.ppp(spomic@pp, marks == i), sigma = bw.diggle)
-    # lambdaTo <- density(spatstat.geom::subset.ppp(spomic@pp, marks == j), sigma = bw.diggle)
-
-    # envelope_result <- spatstat.explore::envelope(
-    #   Y = spatstat.geom::rescale(spatstat.geom::subset.ppp(spomic@pp, marks %in% c(i, j))),
-    #   # Y = spatstat.geom::rescale(spomic@pp),
-    #   fun = spatstat.explore::Kcross.inhom,
-    #   i = i,
-    #   j = j,
-    #   fix.marks = TRUE,
-    #   correction = "Ripley",
-    #   nsim = spomic@details$hyperparameters$csr_nsim,
-    #   global = FALSE,
-    #   verbose = verbose
-    # )
-
-    # envelope_result <- spatstat.explore::envelope(
-    #   Y = spatstat.geom::rescale(ij_subset),
-    #   fun = spatstat.explore::Kcross.inhom,
-    #   i = i,
-    #   j = j,
-    #   lambdaFrom = density(i_subset, sigma = silverman_i),
-    #   lambdaTo = density(j_subset, sigma = silverman_j),
-    #   fix.marks = TRUE,
-    #   correction = "Ripley",
-    #   nsim = spomic@details$hyperparameters$csr_nsim,
-    #   global = FALSE,
-    #   # update = TRUE,
-    #   verbose = verbose
-    # )
-
-    # envelope_result <- spatstat.explore::envelope(
-    #   Y = spatstat.geom::rescale(ij_subset),
-    #   fun = spatstat.explore::Kcross,
-    #   i = i,
-    #   j = j,
-    #   simulate = simulate_expr,
-    #   update = TRUE,
-    #   correction = "Ripley",
-    #   nsim = spomic@details$hyperparameters$csr_nsim,
-    #   global = FALSE,
-    #   verbose = TRUE
-    # )
-
     envelope_results[[paste0(i, "_", j)]] <- envelope_result
-
   })
   names(envelope_results) <- pairwise_combinations
 
@@ -116,9 +76,10 @@ find_nonrandom_pairs <- function(spomic) {
   for(pair in names(envelope_list)) {
     env <- envelope_list[[pair]]
     obs <- approx(env$r, env$obs, xout = spomic@details$hyperparameters$r)$y
-    theo <- approx(env$r, env$theo, xout = spomic@details$hyperparameters$r)$y
+    # theo <- approx(env$r, env$theo, xout = spomic@details$hyperparameters$r)$y
     lo <- approx(env$r, env$lo, xout = spomic@details$hyperparameters$r)$y
     hi <- approx(env$r, env$hi, xout = spomic@details$hyperparameters$r)$y
+    mmean <- approx(env$r, env$mmean, xout = spomic@details$hyperparameters$r)$y
 
     nonrandom_pairs[[pair]] <- data.frame(
       i_j = pair,
@@ -141,7 +102,7 @@ find_nonrandom_pairs <- function(spomic) {
 
 #' @export
 get_silverman <- function(pp_subset) {
-  n <- npoints(pp_subset)
+  n <- pp_subset$n
   coords <- spatstat.geom::coords(pp_subset)
   sd_x <- sd(coords$x)
   sd_y <- sd(coords$y)
@@ -171,37 +132,37 @@ get_kcross <- function(spomic, i, j) {
   silverman_i <- get_silverman(i_subset)
   silverman_j <- get_silverman(j_subset)
 
-  lambdaFrom <- density(i_subset, sigma = silverman_i)
-  lambdaTo <- density(j_subset, sigma = silverman_j)
+  lambdaFrom <- spatstat.explore::density.ppp(i_subset, sigma = silverman_i)
+  lambdaTo <- spatstat.explore::density.ppp(j_subset, sigma = silverman_j)
 
-  simulate_expr <- expression(superimpose(
-    i = rpoispp(lambdaFrom),
-    j = rpoispp(lambdaTo)
-  ))
+  # Create expressions for sampling the from the inhomogeneous intensity functions
+  if(i == j) {
+    simulate_expr <- expression(
+      do.call(spatstat.geom::superimpose, setNames(
+        list(
+          spatstat.random::rpoispp(lambdaTo)
+        ),
+        c(i)
+      ))
+    )
+  } else {
+    simulate_expr <- expression(
+      do.call(spatstat.geom::superimpose, setNames(
+        list(
+          spatstat.random::rpoispp(lambdaTo),
+          spatstat.random::rpoispp(lambdaFrom)
+        ),
+        c(i, j)
+      ))
+    )
+  }
 
-  # suppressWarnings({
-  #   invisible(capture.output({ # The lohboot function has some annoying printouts
-  #     loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(spomic@pp),
-  #                                                spatstat.explore::Kcross.inhom,
-  #                                                from = i,
-  #                                                to = j,
-  #                                                lambdaFrom = spatstat.explore::density.ppp(i_subset),
-  #                                                lambdaTo = spatstat.explore::density.ppp(j_subset),
-  #                                                correction = "Ripley",
-  #                                                global = FALSE,
-  #                                                nsim = 100)
-  #   })
-  #
-  #   )
-  # })
   suppressWarnings({
     invisible(capture.output({ # The lohboot function has some annoying printouts
       loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(ij_subset),
                                                  spatstat.explore::Kcross.inhom,
                                                  from = i,
                                                  to = j,
-                                                 # lambdaFrom = spatstat.explore::density.ppp(i_subset, sigma = silverman_i),
-                                                 # lambdaTo = spatstat.explore::density.ppp(j_subset, sigma = silverman_j),
                                                  simulate = simulate_expr,
                                                  correction = "Ripley",
                                                  global = FALSE,
@@ -213,6 +174,35 @@ get_kcross <- function(spomic, i, j) {
   spomic@results$colocalization_bootstrap[[paste0(i, "_", j)]] <- loh_bootstrap
   return(spomic)
 }
+
+#' @export
+get_all_kcross <- function(spomic) {
+  # Get unique cell types
+  cell_types <- unique(spatstat.geom::marks(spomic@pp))
+
+  # Generate all (i, j) pairs including (i, i)
+  cell_pairs <- expand.grid(i = cell_types, j = cell_types, stringsAsFactors = FALSE)
+
+  # Store results
+  results <- list()
+
+  # Iterate over all (i, j) pairs
+  for (k in seq_len(nrow(cell_pairs))) {
+    i <- cell_pairs$i[k]
+    j <- cell_pairs$j[k]
+
+    # cat("Processing:", i, j, "\n")  # Print progress
+
+    # Run get_kcross for this pair
+    temp_spomic <- get_kcross(spomic, i, j)
+    results[[paste0(i, "_", j)]] <- temp_spomic@results$colocalization_bootstrap[[paste0(i, "_", j)]]
+  }
+
+  spomic@results$colocalization_bootstrap <- results
+  return(spomic)
+}
+
+
 
 #' @export
 get_kcross_summary <- function(spomic) {
