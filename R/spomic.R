@@ -85,15 +85,6 @@ create_spomic <- function(p, drop_na = TRUE) {
     stop("Data frame contains multiple unique sample IDs. Ensure only one sample per Spomic object.")
   }
 
-  # Create Spomic object
-  # object <- new("Spomic",
-  #               sample = as.character(unique_samples),
-  #               df = df,
-  #               pp = spomic_to_pp(df),
-  #               # null_envelope = data.frame(),
-  #               hyperparameters = list(),
-  #               results = list()
-  # )
   object <- new("Spomic",
                 details = list(),
                 df = df,
@@ -108,7 +99,7 @@ create_spomic <- function(p, drop_na = TRUE) {
 }
 
 #' @export
-set_spomic_hyperparameters <- function(spomic, r, colocalization_type = "Kcross.inhom", csr_nsim = 100) {
+set_spomic_hyperparameters <- function(spomic, r, colocalization_type = "Kcross", csr_nsim = 100) {
   spomic@details$hyperparameters$r <- r
   spomic@details$hyperparameters$colocalization_type <- colocalization_type
   spomic@details$hyperparameters$csr_nsim <- csr_nsim

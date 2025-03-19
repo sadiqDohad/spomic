@@ -2,6 +2,9 @@ usethis::use_package("ggplot2")
 
 #' @export
 plot_spomic <- function(spomic, point_size = 0.5, scale_dot_size = 2) {
+  spomic@df$x_rescaled <- spomic@df$x - min(spomic@df$x)
+  spomic@df$y_rescaled <- spomic@df$y - min(spomic@df$y)
+
   g <- ggplot(spomic@df, aes(x=x_rescaled, y=y_rescaled, group=cell_type)) +
     geom_point(aes(color = cell_type), size=point_size) +
     labs(title=spomic@details$sample) +

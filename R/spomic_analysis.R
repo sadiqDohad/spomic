@@ -112,7 +112,66 @@ get_silverman <- function(pp_subset) {
   return(sigma_silverman)
 }
 
+run_lohboot <- function(pp, i, j, colocalization_type) {
+  if(colocalization_type == "Kcross") {
+    if(i == j) {
+      suppressWarnings({
+        invisible(capture.output({ # The lohboot function has some annoying printouts
+          loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(pp),
+                                                     spatstat.explore::Kest,
+                                                     correction = "Ripley",
+                                                     global = FALSE,
+                                                     nsim = 100)
+        })
+        )
+      })
+    } else {
+      suppressWarnings({
+        invisible(capture.output({ # The lohboot function has some annoying printouts
+          loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(pp),
+                                                     spatstat.explore::Kcross,
+                                                     from = i,
+                                                     to = j,
+                                                     correction = "Ripley",
+                                                     global = FALSE,
+                                                     nsim = 100)
+        })
+        )
+      })
+    }
+  } else if(colocalization_type == "Kcross.inhom") {
+    if(i == j) {
+      suppressWarnings({
+        invisible(capture.output({ # The lohboot function has some annoying printouts
+          loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(pp),
+                                                     spatstat.explore::Kinhom,
+                                                     correction = "Ripley",
+                                                     global = FALSE,
+                                                     nsim = 100)
+        })
+        )
+      })
+    } else {
+      suppressWarnings({
+        invisible(capture.output({ # The lohboot function has some annoying printouts
+          loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(pp),
+                                                     spatstat.explore::Kcross.inhom,
+                                                     from = i,
+                                                     to = j,
+                                                     correction = "Ripley",
+                                                     global = FALSE,
+                                                     nsim = 100)
+        })
+        )
+      })
+    }
+  } else if(colocalization_type == "CLQ") {
 
+  } else {
+    warning("Enter a supported colocalization statistic: {Kcross, Kcross.inhom, CLQ}.")
+  }
+
+}
 
 
 #' @export
@@ -157,20 +216,39 @@ get_kcross <- function(spomic, i, j) {
     )
   }
 
-  suppressWarnings({
-    invisible(capture.output({ # The lohboot function has some annoying printouts
-      loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(ij_subset),
-                                                 spatstat.explore::Kcross.inhom,
-                                                 from = i,
-                                                 to = j,
-                                                 simulate = simulate_expr,
-                                                 correction = "Ripley",
-                                                 global = FALSE,
-                                                 nsim = 100)
-    })
+  if (i != j) {
+    suppressWarnings({
+      invisible(capture.output({ # The lohboot function has some annoying printouts
+        loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(ij_subset),
+                                                   # spatstat.explore::Kcross.inhom,
+                                                   spatstat.explore::Kcross,
+                                                   from = i,
+                                                   to = j,
+                                                   # simulate = simulate_expr,
+                                                   correction = "Ripley",
+                                                   global = FALSE,
+                                                   nsim = 100)
+      })
 
-    )
-  })
+      )
+    })
+  } else {
+    suppressWarnings({
+      invisible(capture.output({ # The lohboot function has some annoying printouts
+        loh_bootstrap <- spatstat.explore::lohboot(spatstat.geom::rescale(ij_subset),
+                                                   # spatstat.explore::Kcross.inhom,
+                                                   spatstat.explore::Kest,
+                                                   # from = i,
+                                                   # to = j,
+                                                   # simulate = simulate_expr,
+                                                   correction = "Ripley",
+                                                   global = FALSE,
+                                                   nsim = 100)
+      })
+
+      )
+    })
+  }
   spomic@results$colocalization_bootstrap[[paste0(i, "_", j)]] <- loh_bootstrap
   return(spomic)
 }
