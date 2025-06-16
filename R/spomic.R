@@ -99,10 +99,19 @@ create_spomic <- function(p, drop_na = TRUE) {
 }
 
 #' @export
-set_spomic_hyperparameters <- function(spomic, r, colocalization_type = "Kcross", csr_nsim = 100) {
-  spomic@details$hyperparameters$r <- r
+set_spomic_hyperparameters <- function(spomic, colocalization_type = "Lcross", fixed_distance = FALSE, r = NA, csr_nsim = NA) {
   spomic@details$hyperparameters$colocalization_type <- colocalization_type
+  spomic@details$hyperparameters$fixed_distance <- fixed_distance
+  spomic@details$hyperparameters$r <- r
   spomic@details$hyperparameters$csr_nsim <- csr_nsim
-
   return(spomic)
+}
+
+#' @export
+ppp_to_df <- function(pp, sample_name){
+  df <- data.frame(x = pp$x,
+                   y = pp$y,
+                   cell_type = pp$marks,
+                   sample = sample_name)
+  return(df)
 }
