@@ -4,6 +4,6 @@ This package contains the spatial omic (spomic) class and some useful plotting f
 
 ## Installation
 ```r
-devtools::install_github("chang-jacob/spomic")
+devtools::install_github("plevritis-lab/spomic")
 library(spomic)
 ```
