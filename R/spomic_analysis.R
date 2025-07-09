@@ -428,8 +428,16 @@ get_spatial_summary <- function(spomic) {
       if (length(colocalization_i_j$iso) > 1) {
         colocalization <- approx(colocalization_i_j$r, colocalization_i_j$iso, xout = r_val)$y
         colocalization_theo <- approx(colocalization_i_j$r, colocalization_i_j$theo, xout = r_val)$y
-        colocalization_lo <- approx(colocalization_i_j$r, colocalization_i_j$lo, xout = r_val)$y
-        colocalization_hi <- approx(colocalization_i_j$r, colocalization_i_j$hi, xout = r_val)$y
+        colocalization_lo <- tryCatch(
+          approx(colocalization_i_j$r, colocalization_i_j$lo, xout = r_val)$y,
+          error = function(e) NA
+        )
+        colocalization_hi <- tryCatch(
+          approx(colocalization_i_j$r, colocalization_i_j$hi, xout = r_val)$y,
+          error = function(e) NA
+        )
+        # colocalization_lo <- approx(colocalization_i_j$r, colocalization_i_j$lo, xout = r_val)$y
+        # colocalization_hi <- approx(colocalization_i_j$r, colocalization_i_j$hi, xout = r_val)$y
         colocalization_var <- ((colocalization_hi - colocalization_lo) / (2 * 1.96))^2
 
       } else {
