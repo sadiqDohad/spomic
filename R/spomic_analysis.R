@@ -65,6 +65,7 @@ calculate_csr_envelopes <- function(spomic, density_smoothing = "silverman", ver
   return(spomic)
 }
 
+#' @export
 safe_approx <- function(x, y, xout) {
   if (sum(!is.na(x) & !is.na(y)) >= 2) {
     return(approx(x, y, xout = xout)$y)
@@ -107,6 +108,7 @@ find_nonrandom_pairs <- function(spomic) {
   return(spomic)
 }
 
+#' @export
 run_lohboot <- function(spomic, i, j) {
 
   if(spomic@details$hyperparameters$colocalization_type == "Kcross") {
@@ -246,6 +248,7 @@ get_lcross <- function(spomic, i, j) {
   return(spomic)
 }
 
+#' @export
 get_lcross.inhom <- function(spomic, i, j) {
   if(any(!c(i, j) %in% spatstat.geom::marks(spomic@pp)) | (sum(spatstat.geom::marks(spomic@pp) == i) < 2) | (sum(spatstat.geom::marks(spomic@pp) == j) < 2)) {
     spomic@results$colocalization_bootstrap[[paste0(i, "_", j)]] <- data.frame(sample = spomic@details$sample,
@@ -285,6 +288,7 @@ get_lcross.inhom <- function(spomic, i, j) {
   return(spomic)
 }
 
+#' @export
 get_clq <- function(spomic, n_sim = 100) {
   sf <- ppp_to_sf(spomic@pp)
   marks_vec <- as.character(sf$marks)
@@ -342,7 +346,7 @@ get_clq <- function(spomic, n_sim = 100) {
   return(spomic)
 }
 
-
+#' @export
 get_spatial_stats <- function(spomic) {
   cell_types <- unique(spatstat.geom::marks(spomic@pp))
   cell_pairs <- expand.grid(i = cell_types, j = cell_types, stringsAsFactors = FALSE)
@@ -458,34 +462,6 @@ get_spatial_summary <- function(spomic) {
   } else {
     return(spomic@results$colocalization_bootstrap)
   }
-#   r_val <- spomic@details$hyperparameters$r
-#   sample_name <- spomic@details$sample
-#
-# keys <- names(spomic@results$colocalization_bootstrap)
-# results <- lapply(keys, function(i_j) {
-#   colocalization_i_j <- spomic@results$colocalization_bootstrap[[i_j]]
-#
-#   if (length(colocalization_i_j$iso) > 1) {
-#     colocalization <- approx(colocalization_i_j$r, colocalization_i_j$iso, xout = r_val)$y
-#     colocalization_theo <- approx(colocalization_i_j$r, colocalization_i_j$theo, xout = r_val)$y
-#     colocalization_lo <- approx(colocalization_i_j$r, colocalization_i_j$lo, xout = r_val)$y
-#     colocalization_hi <- approx(colocalization_i_j$r, colocalization_i_j$hi, xout = r_val)$y
-#     colocalization_var <- ((colocalization_hi - colocalization_lo) / (2 * 1.96))^2
-#
-#   } else {
-#     colocalization <- colocalization_lo <- colocalization_hi <- colocalization_var <- NA
-#   }
-#
-#   data.frame(
-#     sample = sample_name,
-#     i_j = i_j,
-#     colocalization_type = colocalization_type,
-#     colocalization_stat = colocalization,
-#     colocalization_theo = colocalization_theo,
-#     colocalization_lo = colocalization_lo,
-#     colocalization_hi = colocalization_hi,
-#     colocalization_var = colocalization_var)
-# })
 
 return(dplyr::bind_rows(results))
 }
@@ -494,22 +470,6 @@ return(dplyr::bind_rows(results))
 
 #' @export
 get_kcross_summary <- function(spomic) {
-  # results <- list()
-  # for(i_j in names(spomic@results$colocalization_bootstrap)) {
-  #   # print(i_j)
-  #
-  #   kcross_i_j <- spomic@results$colocalization_bootstrap[[i_j]]
-  #   kcross <- approx(kcross_i_j$r, kcross_i_j$iso, xout = spomic@details$hyperparameters$r)$y
-  #   kcross_lo <- approx(kcross_i_j$r, kcross_i_j$lo, xout = spomic@details$hyperparameters$r)$y
-  #   kcross_hi <- approx(kcross_i_j$r, kcross_i_j$hi, xout = spomic@details$hyperparameters$r)$y
-  #   kcross_var <- ((kcross_hi - kcross_lo) / (2 * 1.96))^2
-  #
-  #   results[[i_j]] <- data.frame(
-  #     sample = spomic@details$sample,
-  #     i_j = i_j,
-  #     kcross = kcross,
-  #     kcross_var = kcross_var)
-  # }
   results <- list()
   for(i_j in names(spomic@results$colocalization_bootstrap)) {
     print(i_j)

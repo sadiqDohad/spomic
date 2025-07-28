@@ -1,4 +1,3 @@
-usethis::use_package("ggplot2")
 
 #' @export
 spomic_style <- function(x) {
