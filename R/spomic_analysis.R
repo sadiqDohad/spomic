@@ -1,15 +1,15 @@
-#' @export
-get_silverman <- function(pp_subset) {
-  # Function to use Silverman's rule of thumb for kernel density estimation
-  n <- pp_subset$n
-  coords <- spatstat.geom::coords(pp_subset)
-  sd_x <- sd(coords$x)
-  sd_y <- sd(coords$y)
-  sd_total <- sqrt(sd_x^2 + sd_y^2)
-  sigma_silverman <- sd_total * n^(-1/5)
-
-  return(sigma_silverman)
-}
+#' #' @export
+#' get_silverman <- function(pp_subset) {
+#'   # Function to use Silverman's rule of thumb for kernel density estimation
+#'   n <- pp_subset$n
+#'   coords <- spatstat.geom::coords(pp_subset)
+#'   sd_x <- sd(coords$x)
+#'   sd_y <- sd(coords$y)
+#'   sd_total <- sqrt(sd_x^2 + sd_y^2)
+#'   sigma_silverman <- sd_total * n^(-1/5)
+#' 
+#'   return(sigma_silverman)
+#' }
 
 #' @export
 calculate_csr_envelopes <- function(spomic, density_smoothing = "silverman", verbose = FALSE) {
