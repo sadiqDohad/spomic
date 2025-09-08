@@ -1,12 +1,11 @@
 Package: spomic
-Title: What the Package Does (One Line, Title Case)
+Title: Analysis of Single-Cell Spatial Omics (spomic) Data
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("Jacob", "Chang", , "jachang4@stanford.edu", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: Data structures and functions to perform analysis of single-cell spatial omics data. 
+License: MIT license
 Imports: 
     dplyr,
     forcats,
@@ -20,7 +19,8 @@ Imports:
     pbapply,
     tidyr,
     viridis, 
-    concaveman
+    concaveman,
+    tidyplots
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
