@@ -1,4 +1,4 @@
- @export
+#' @export
   get_silverman <- function(pp_subset) {
   # Function to use Silverman's rule of thumb for kernel density estimation
    n <- pp_subset$n
